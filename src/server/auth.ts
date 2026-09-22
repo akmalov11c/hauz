@@ -13,7 +13,6 @@ import { z } from 'zod'
 
 import { adminAccount, sessionAccount } from './appwrite'
 import {
-  clearPendingUserId,
   clearSessionCookie,
   getPendingUserId,
   getSessionCookie,
@@ -50,8 +49,11 @@ export const verifyCode = createServerFn({ method: 'POST' })
     }
 
     const session = await adminAccount().createSession(userId, data.code)
+    // Set exactly one cookie here. Emitting a second Set-Cookie in the same
+    // response (e.g. clearing the pending cookie) gets collapsed into one
+    // malformed header and the browser drops both. The pending cookie is
+    // short-lived (10-minute max-age) and httpOnly, so we let it self-expire.
     setSessionCookie(session.secret)
-    clearPendingUserId()
 
     return { ok: true as const }
   })
@@ -72,6 +74,8 @@ export const getCurrentUser = createServerFn({ method: 'GET' }).handler(
       const user = await sessionAccount(secret).get()
       return { id: user.$id, email: user.email, name: user.name }
     } catch {
+      // Fail closed: any failure to load the user means signed out. Drop the
+      // cookie so a broken or expired secret does not linger.
       clearSessionCookie()
       return null
     }
