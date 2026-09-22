@@ -10,7 +10,7 @@ import { logout } from '#/server/auth'
 export function Header() {
   const router = useRouter()
   const location = useLocation()
-  const { user } = useRouteContext({ from: '__root__' })
+  const { user, account } = useRouteContext({ from: '__root__' })
 
   async function handleLogout() {
     await logout()
@@ -31,9 +31,9 @@ export function Header() {
         <nav>
           {user ? (
             <>
-              {/* TODO(Commit 7): show the personal account's firstName from the
-                  Function instead of the Appwrite account name/email. */}
-              <span className="user-name">{user.name || user.email}</span>
+              <span className="user-name">
+                {account?.firstName ?? user.email}
+              </span>
               <button
                 type="button"
                 className="btn-secondary"

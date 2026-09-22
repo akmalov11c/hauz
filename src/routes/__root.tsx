@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-router'
 
 import { Header } from '#/components/Header'
+import { getPersonalAccount } from '#/server/account'
 import { getCurrentUser } from '#/server/auth'
 
 import appCss from '../styles.css?url'
@@ -15,11 +16,23 @@ export interface RouterContext {
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-  // Resolve the signed-in user during SSR and put it in context, so the header
-  // (and child-route guards) see it on the first paint after a hard refresh.
+  // Resolve the signed-in user and their personal account during SSR and put
+  // both in context, so the header shows the right first name and child-route
+  // guards work on the first paint after a hard refresh.
   beforeLoad: async () => {
     const user = await getCurrentUser()
-    return { user }
+    if (!user) {
+      return { user: null, account: null }
+    }
+
+    try {
+      const account = await getPersonalAccount()
+      return { user, account }
+    } catch {
+      // Never let an account-load failure break every page; treat as "no
+      // account", which routes onboarding-required users to onboarding.
+      return { user, account: null }
+    }
   },
   head: () => ({
     meta: [
