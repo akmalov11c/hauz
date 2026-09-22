@@ -3,6 +3,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'
 
+import { safeRedirect } from '#/lib/redirect'
+import { getPersonalAccount } from '#/server/account'
 import { sendCode, verifyCode } from '#/server/auth'
 
 export const Route = createFileRoute('/signin')({
@@ -10,18 +12,6 @@ export const Route = createFileRoute('/signin')({
     z.object({ redirect: z.string().optional() }).parse(search),
   component: SignIn,
 })
-
-/**
- * Only ever redirect to an internal path. A value like `//evil.com` or
- * `https://evil.com` would be an open redirect, so anything that is not a
- * single-slash-rooted path falls back to the home page.
- */
-function safeRedirect(redirect: string | undefined): string {
-  if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
-    return redirect
-  }
-  return '/'
-}
 
 function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback
@@ -42,12 +32,19 @@ function SignIn() {
 
   const verify = useMutation({
     mutationFn: (value: string) => verifyCode({ data: { code: value } }),
-    onSuccess: () => {
-      // TODO(Commit 7): if the user has no personal account yet, send them to
-      // /onboarding (carrying `redirect`) instead of straight to the target.
-      // Full-page navigation so the server re-reads the new session cookie and
-      // renders the signed-in header on the very first paint.
-      window.location.assign(target)
+    onSuccess: async () => {
+      // Session cookie is set now, so this runs as the signed-in user. A new
+      // user has no personal account yet and goes to onboarding (carrying the
+      // final target); a returning user goes straight there. Full navigation so
+      // the server re-reads the cookie and renders the signed-in header.
+      const account = await getPersonalAccount()
+      if (account) {
+        window.location.assign(target)
+      } else {
+        window.location.assign(
+          `/onboarding?redirect=${encodeURIComponent(target)}`,
+        )
+      }
     },
   })
 

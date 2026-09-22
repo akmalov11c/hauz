@@ -462,3 +462,15 @@ button.secondary:hover,
   border-color: color-mix(in srgb, var(--danger) 35%, transparent);
   background: color-mix(in srgb, var(--danger) 10%, transparent);
 }
+
+.alert-success {
+  color: #15803d;
+  border-color: color-mix(in srgb, #16a34a 35%, transparent);
+  background: color-mix(in srgb, #16a34a 12%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .alert-success {
+    color: #4ade80;
+  }
+}
