@@ -29,7 +29,7 @@ export interface CurrentUser {
 
 /** Step one: email a sign-in code and remember the user id it was issued for. */
 export const sendCode = createServerFn({ method: 'POST' })
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ email: z.email() }).parse(data),
   )
   .handler(async ({ data }) => {
@@ -40,7 +40,7 @@ export const sendCode = createServerFn({ method: 'POST' })
 
 /** Step two: exchange the code for a session and store its secret in a cookie. */
 export const verifyCode = createServerFn({ method: 'POST' })
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ code: z.string().trim().min(1) }).parse(data),
   )
   .handler(async ({ data }) => {
