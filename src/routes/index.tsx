@@ -1,8 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute, useRouteContext } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/')({ component: Home })
 
 function Home() {
+  const { user } = useRouteContext({ from: '__root__' })
+
   return (
     <main className="home">
       <section className="hero">
@@ -15,12 +17,29 @@ function Home() {
             profile.
           </p>
           <div className="hero__actions">
-            <a className="btn btn-lg" href="/signin?redirect=%2Fprofile">
-              Get started
-            </a>
-            <a className="btn-secondary btn-lg" href="/signin?redirect=%2Fprofile">
-              Sign in
-            </a>
+            {user ? (
+              // Signed in: no sign-in CTAs, just a way into the app.
+              <a className="btn btn-lg" href="/profile">
+                Go to your profile
+              </a>
+            ) : (
+              <>
+                <Link
+                  className="btn btn-lg"
+                  to="/signin"
+                  search={{ redirect: '/profile' }}
+                >
+                  Get started
+                </Link>
+                <Link
+                  className="btn-secondary btn-lg"
+                  to="/signin"
+                  search={{ redirect: '/' }}
+                >
+                  Sign in
+                </Link>
+              </>
+            )}
           </div>
           <ul className="feature-list">
             <li>Email code sign-in — no passwords to remember</li>

@@ -43,14 +43,13 @@ export function Header() {
               </button>
             </>
           ) : (
-            // Plain anchor for now; becomes a typed <Link to="/signin"> once
-            // that route exists (Commit 5). Full reload here is harmless.
-            <a
+            <Link
+              to="/signin"
+              search={{ redirect: location.href }}
               className="btn-secondary"
-              href={`/signin?redirect=${encodeURIComponent(location.href)}`}
             >
               Sign in
-            </a>
+            </Link>
           )}
         </nav>
       </div>
