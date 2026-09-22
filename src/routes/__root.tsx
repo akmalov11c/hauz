@@ -5,6 +5,9 @@ import {
   createRootRouteWithContext,
 } from '@tanstack/react-router'
 
+import { Header } from '#/components/Header'
+import { getCurrentUser } from '#/server/auth'
+
 import appCss from '../styles.css?url'
 
 export interface RouterContext {
@@ -12,6 +15,12 @@ export interface RouterContext {
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
+  // Resolve the signed-in user during SSR and put it in context, so the header
+  // (and child-route guards) see it on the first paint after a hard refresh.
+  beforeLoad: async () => {
+    const user = await getCurrentUser()
+    return { user }
+  },
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
@@ -30,7 +39,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {/* The site header belongs here. See TASK.md. */}
+        <Header />
         {children}
         <Scripts />
       </body>
